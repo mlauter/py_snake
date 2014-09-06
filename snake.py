@@ -21,6 +21,9 @@ class Game(object):
     def add_body(self,body):
         self.bodies.append(body)
 
+    def remove_body(self,body):
+        self.bodies.remove(body)
+
     def detect_collision(self, body1, body2):
         if body1.position == body2.position:
             body1.collision(body2)
@@ -93,12 +96,12 @@ class Head(object):
             #collision of head with food or self
             body2 = args[0]
             if type(body2) is Food:
-                self.eat()
+                self.eat(body2)
             elif type(body2) is Segment:
                 self.die()
 
-    def eat(self):
-        pass
+    def eat(self,food):
+        self.game.remove_body(food)
     #     foods = [body for body in self.game.bodies if type(body) is Food]
     #     for food in foods:
     #         if self.position == food.position:
@@ -154,12 +157,13 @@ class Food(object):
         #this is rather ugly
         self.position = [random_grid_position(game.grid_square, game.size[0])-game.grid_square/2, random_grid_position(game.grid_square, game.size[1])-game.grid_square/2]
         self.square = pygame.Surface((10, 10))
+        self.game = game
 
     def update(self):
         pass
 
     def collision(self,body2):
-        pass
+        self.game.add_body(Food(self.game))
 
     def draw(self,screen):
         self.square.fill((0, 0, 255))
