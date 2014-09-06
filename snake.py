@@ -19,7 +19,7 @@ class Game(object):
             self.draw()
 
     def add_body(self,body):
-        self.bodies.append(body)
+        self.bodies.insert(0,body)
 
     def remove_body(self,body):
         self.bodies.remove(body)
@@ -30,8 +30,9 @@ class Game(object):
             body2.collision(body1)
 
     def detect_wall_collision(self, body):
-        mins = [self.grid_square]*2
-        maxs = [a - 2*b for a,b in zip(self.size, mins)] 
+        print body.position
+        mins = [self.grid_square/2]*2
+        maxs = [a - b for a,b in zip(self.size, mins)] 
         if body.position[0] <= mins[0] or body.position[1] <= mins[1] or body.position[0] >= maxs[0] or body.position[1] >= maxs[1]:
             body.collision()
 
@@ -64,7 +65,8 @@ class Head(object):
         self.delay = delay
         self.game = game
         self.segments = []
-        for i in range(1,7):
+        self.grow = False
+        for i in range(1,2):
             pos = [self.position[0], self.position[1]+i*self.game.grid_square]
             segment = Segment(self.game,pos)
             self.segments.append(segment)
@@ -78,13 +80,17 @@ class Head(object):
             self.position[1] += self.speed[1]
             self.lastmove = self.now
             if self.speed != [0,0]:
-                for segment in self.segments:
-                    segment_last_position = segment.get_position()
-                    if segment_last_position == self.position:
-                        self.die()
-                    else:
-                        segment.move(last_position)
+                if self.grow == False:
+                    for segment in self.segments:
+                        segment_last_position = segment.get_position()
+                        segment.position = last_position
                         last_position = segment_last_position
+                else:
+                    pos = [a-b for a,b in zip(self.position,self.speed)]
+                    segment = Segment(self.game,pos)
+                    self.segments.insert(0,segment)
+                    self.game.add_body(segment)
+                    self.grow = False
 
         self.now += 1
 
@@ -101,15 +107,14 @@ class Head(object):
                 self.die()
 
     def eat(self,food):
+        # remove the food 
         self.game.remove_body(food)
-    #     foods = [body for body in self.game.bodies if type(body) is Food]
-    #     for food in foods:
-    #         if self.position == food.position:
-    #             food.be_eaten()
+        # grow self
+        self.grow = True
+
     def die(self):
         for body in self.game.bodies:
             body.speed =[0,0]
-        print "you died"
 
     def draw(self,screen):
         self.square.fill((0, 255, 0))
@@ -118,14 +123,14 @@ class Head(object):
     def handle_keys(self,speed):
         keys_pressed = pygame.key.get_pressed()
 
-        if keys_pressed[pygame.K_LEFT] and speed != [10,0]:
-            self.speed = [-10,0]
-        elif keys_pressed[pygame.K_RIGHT] and speed != [-10,0]:
-            self.speed = [10,0]
-        elif keys_pressed[pygame.K_UP] and speed != [0,10]:
-            self.speed = [0,-10]
-        elif keys_pressed[pygame.K_DOWN] and speed != [0,-10]:
-            self.speed = [0,10]
+        if keys_pressed[pygame.K_LEFT] and speed != [self.game.grid_square,0]:
+            self.speed = [-self.game.grid_square,0]
+        elif keys_pressed[pygame.K_RIGHT] and speed != [-self.game.grid_square,0]:
+            self.speed = [self.game.grid_square,0]
+        elif keys_pressed[pygame.K_UP] and speed != [0,self.game.grid_square]:
+            self.speed = [0,-self.game.grid_square]
+        elif keys_pressed[pygame.K_DOWN] and speed != [0,-self.game.grid_square]:
+            self.speed = [0,self.game.grid_square]
 
 # make a segment class, instantiate five or so, make sure they follow the head around, each segment tells the one behind it what to do
 class Segment(object):
@@ -143,10 +148,6 @@ class Segment(object):
     def get_position(self):
         return self.position
 
-    #don't do this here
-    def move(self,head_pos):
-        self.position = head_pos
-
     def draw(self,screen):
         self.square.fill((0, 255, 0))
         screen.blit(self.square,self.position)
@@ -155,15 +156,35 @@ class Segment(object):
 class Food(object):
     def __init__(self,game):
         #this is rather ugly
-        self.position = [random_grid_position(game.grid_square, game.size[0])-game.grid_square/2, random_grid_position(game.grid_square, game.size[1])-game.grid_square/2]
+        
+
         self.square = pygame.Surface((10, 10))
         self.game = game
+        new_position = self.get_new_position()
+        #avoid a new position that overlaps with the snake
+        while not new_position:
+            new_position = self.get_new_position()
+        self.position = new_position
 
     def update(self):
         pass
 
+    def get_new_position(self):
+        new_position = [random_grid_position(self.game.grid_square, self.game.size[0]-self.game.grid_square)-self.game.grid_square/2, random_grid_position(self.game.grid_square, self.game.size[1]-self.game.grid_square)-self.game.grid_square/2]
+        occupied = False
+        for body in self.game.bodies:
+            if body.position == new_position:
+                occupied = True
+                break
+        if occupied == True:
+            return False
+        else:
+            return new_position
+
+
     def collision(self,body2):
-        self.game.add_body(Food(self.game))
+        if type(body2) is Head:
+            self.game.add_body(Food(self.game))
 
     def draw(self,screen):
         self.square.fill((0, 0, 255))
@@ -171,4 +192,4 @@ class Food(object):
 
 if __name__ == "__main__":
     pygame.init()
-    Game(400,400)
+    Game(200,200)
