@@ -9,10 +9,14 @@ class Game(object):
         self.size = width, height
         self.grid_square = 10
         self.screen = pygame.display.set_mode(self.size)
+
         self.bodies = []
         self.bodies.append(Head([width/2-self.grid_square/2,height/2-self.grid_square/2],self))
         self.bodies.append(Food(self))
 
+        
+        start_menu_items = ['Ready to play Snake?','Press ENTER to play.', 'Press Q to quit'];
+        GameMenu(self,start_menu_items)
         while 1:
 
             self.update()
@@ -30,7 +34,6 @@ class Game(object):
             body2.collision(body1)
 
     def detect_wall_collision(self, body):
-        print body.position
         mins = [self.grid_square/2]*2
         maxs = [a - b for a,b in zip(self.size, mins)] 
         if body.position[0] <= mins[0] or body.position[1] <= mins[1] or body.position[0] >= maxs[0] or body.position[1] >= maxs[1]:
@@ -53,7 +56,56 @@ class Game(object):
             body.draw(self.screen)
         pygame.display.flip()
 
+    def end_game(self):
+        end_menu_items = ['You died!','Press ENTER to try again.', 'Press Q to quit'];
+        GameMenu(self,end_menu_items)
+        Game(300,300)
 
+class GameMenu(object):
+    def __init__(self, game, items, bg_color=(0,0,0), font=None, font_size=30,font_color=(255, 255, 255)):
+        
+        self.game = game
+        self.screen = game.screen
+        self.scr_width = self.screen.get_rect().width
+        self.scr_height = self.screen.get_rect().height
+        self.bg_color = bg_color
+        self.font = pygame.font.SysFont(font, font_size)
+        self.font_color = font_color
+        self.items = []
+        for index, item in enumerate(items):
+            label = self.font.render(item, 1, font_color)
+ 
+            width = label.get_rect().width
+            height = label.get_rect().height
+ 
+            posx = (self.scr_width / 2) - (width / 2)
+            # t_h: total height of text block
+            t_h = len(items) * height
+            posy = (self.scr_height / 2) - (t_h / 2) + (index * height)
+ 
+            self.items.append([item, label, (width, height), (posx, posy)])
+
+        self.run()
+
+    def run(self):
+        mainloop = True
+        while mainloop:
+ 
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    mainloop = False
+                    sys.exit()
+                if event.type == pygame.KEYDOWN:
+                    if event.key==pygame.K_RETURN:
+                        mainloop = False
+                    elif event.key==pygame.K_q:
+                        mainloop = False
+                        sys.exit()
+            # Redraw the background
+            self.screen.fill(self.bg_color)
+            for name, label, (width, height), (posx, posy) in self.items:
+                self.screen.blit(label, (posx, posy))
+            pygame.display.flip()
 
 class Head(object):
 #make sure to tell any segment behind you what to do (take your old place)
@@ -115,6 +167,7 @@ class Head(object):
     def die(self):
         for body in self.game.bodies:
             body.speed =[0,0]
+        self.game.end_game()
 
     def draw(self,screen):
         self.square.fill((0, 255, 0))
@@ -155,8 +208,6 @@ class Segment(object):
         
 class Food(object):
     def __init__(self,game):
-        #this is rather ugly
-        
 
         self.square = pygame.Surface((10, 10))
         self.game = game
@@ -192,4 +243,4 @@ class Food(object):
 
 if __name__ == "__main__":
     pygame.init()
-    Game(200,200)
+    Game(300,300)
