@@ -14,9 +14,9 @@ class Game(object):
         self.bodies.append(Head([width/2-self.grid_square/2,height/2-self.grid_square/2],self))
         self.bodies.append(Food(self))
 
-        
-        start_menu_items = ['Ready to play Snake?','Press ENTER to play.', 'Press Q to quit'];
-        GameMenu(self,start_menu_items)
+        self.menu_font = pygame.font.Font('ARCADECLASSIC.TTF',26)
+        start_menu_items = ['Welcome to Snake','Press ENTER to play', 'Press Q to quit'];
+        GameMenu(self,start_menu_items,font=self.menu_font)
         while 1:
 
             self.update()
@@ -57,8 +57,8 @@ class Game(object):
         pygame.display.flip()
 
     def end_game(self):
-        end_menu_items = ['You died!','Press ENTER to try again.', 'Press Q to quit'];
-        GameMenu(self,end_menu_items)
+        end_menu_items = ['You died','Press ENTER to try again', 'Press Q to quit'];
+        GameMenu(self,end_menu_items,font=self.menu_font)
         Game(300,300)
 
 class GameMenu(object):
@@ -69,7 +69,7 @@ class GameMenu(object):
         self.scr_width = self.screen.get_rect().width
         self.scr_height = self.screen.get_rect().height
         self.bg_color = bg_color
-        self.font = pygame.font.SysFont(font, font_size)
+        self.font = font
         self.font_color = font_color
         self.items = []
         for index, item in enumerate(items):
