@@ -3,6 +3,6 @@ py_snake
 
 classic Snake game written in python with pygame
 
-## Dependencies
+#### Dependencies
 
 pygame = 1.9.1
