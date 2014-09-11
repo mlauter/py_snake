@@ -107,6 +107,7 @@ class GameMenu(object):
                 self.screen.blit(label, (posx, posy))
             pygame.display.flip()
 
+
 class Head(object):
 #make sure to tell any segment behind you what to do (take your old place)
     def __init__(self,position, game, speed=[0,0],lastmove=0, delay=10):
